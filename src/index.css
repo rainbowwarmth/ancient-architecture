@@ -155,7 +155,7 @@ h6 {
 
 /* ═══ 水墨标题渐变 ═══ */
 .gradient-text {
-  background: linear-gradient(135deg, #000 0%, #222 40%, var(--color-cinnabar) 100%);
+  background: linear-gradient(135deg, var(--color-ink-dark) 0%, var(--color-ink-dark) 40%, var(--color-cinnabar) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

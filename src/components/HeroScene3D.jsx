@@ -1,16 +1,22 @@
 import { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { useTheme } from '../contexts/ThemeContext'
 
 /* 墨尘悬浮粒子系统 */
-function InkDustParticles({ count = 800 }) {
+function InkDustParticles({ count = 800, isDarkMode }) {
   const ref = useRef()
   const { positions, colors, randoms } = useMemo(() => {
     const pos = new Float32Array(count * 3)
     const col = new Float32Array(count * 3)
     const rnd = new Float32Array(count)
 
-    const palette = [
+    const palette = isDarkMode ? [
+      new THREE.Color('#ffffff'), // 白色
+      new THREE.Color('#b0b0b0'), // 浅灰
+      new THREE.Color('#808080'), // 中灰
+      new THREE.Color('#e63946'), // 朱红点缀
+    ] : [
       new THREE.Color('#2c2c2c'), // 焦墨
       new THREE.Color('#4a5c68'), // 黛青
       new THREE.Color('#666666'), // 烟墨
@@ -23,7 +29,7 @@ function InkDustParticles({ count = 800 }) {
       pos[i * 3 + 1] = (Math.random() - 0.5) * 20
       pos[i * 3 + 2] = (Math.random() - 0.5) * 30
 
-      // 颜色权重：80%灰黑，15%黛青，5%朱砂
+      // 颜色权重：80%主色，15%次要，5%点缀
       const randType = Math.random()
       let c = palette[0]
       if (randType > 0.8 && randType <= 0.95) c = palette[1]
@@ -34,7 +40,7 @@ function InkDustParticles({ count = 800 }) {
       rnd[i] = Math.random()
     }
     return { positions: pos, colors: col, randoms: rnd }
-  }, [count])
+  }, [count, isDarkMode])
 
   useFrame((s) => {
     if (!ref.current) return
@@ -74,7 +80,7 @@ function InkDustParticles({ count = 800 }) {
 }
 
 /* 核心水墨氤氲动画 (用于替换光球) */
-function InkSmudgeCluster() {
+function InkSmudgeCluster({ isDarkMode }) {
   const groupRef = useRef()
 
   useFrame((s) => {
@@ -90,17 +96,29 @@ function InkSmudgeCluster() {
       {/* 使用几个大型淡色球体模拟水墨在水中的渲染 */}
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[2.5, 32, 32]} />
-        <meshBasicMaterial color="#2c2c2c" transparent opacity={0.02} depthWrite={false} />
+        <meshBasicMaterial 
+          color={isDarkMode ? '#ffffff' : '#2c2c2c'} 
+          transparent 
+          opacity={isDarkMode ? 0.03 : 0.02} 
+          depthWrite={false} 
+        />
       </mesh>
       <mesh position={[1, 1, -1]} scale={[1.2, 0.8, 1]}>
         <sphereGeometry args={[1.5, 32, 32]} />
-        <meshBasicMaterial color="#4a5c68" transparent opacity={0.015} depthWrite={false} />
+        <meshBasicMaterial 
+          color={isDarkMode ? '#b0b0b0' : '#4a5c68'} 
+          transparent 
+          opacity={isDarkMode ? 0.02 : 0.015} 
+          depthWrite={false} 
+        />
       </mesh>
     </group>
   )
 }
 
 export default function HeroScene3D() {
+  const { isDarkMode } = useTheme()
+  
   return (
     <div className="absolute inset-0 z-0">
       <Canvas
@@ -108,12 +126,12 @@ export default function HeroScene3D() {
         gl={{ antialias: true, alpha: true }}
         style={{ background: 'transparent' }}
       >
-        <color attach="background" args={['#f9f6f0']} />
+        <color attach="background" args={[isDarkMode ? '#2a2a2a' : '#f5f5f5']} />
         {/* 降低雾气浓度，增加留白深度 */}
-        <fog attach="fog" args={['#f9f6f0', 10, 30]} />
+        <fog attach="fog" args={[isDarkMode ? '#2a2a2a' : '#f5f5f5', 10, 30]} />
 
-        <InkDustParticles count={1500} />
-        <InkSmudgeCluster />
+        <InkDustParticles count={1500} isDarkMode={isDarkMode} />
+        <InkSmudgeCluster isDarkMode={isDarkMode} />
       </Canvas>
     </div>
   )
